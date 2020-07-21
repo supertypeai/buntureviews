@@ -4,14 +4,34 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+from .utils import validate_appid
+
 
 class App(models.Model):
+    appid = models.CharField(max_length=60)
+    primaryCountry = models.CharField(max_length=2)
     appName = models.CharField(max_length=60)
     store = models.CharField(max_length=30)
-    appid = models.CharField(max_length=60)
     publisher = models.CharField(max_length=60)
     category = models.CharField(max_length=30)
     similar = models.ManyToManyField("self", blank=True)
+
+    class Meta:
+        unique_together = ("appid", "primaryCountry")
+
+    # def clean(self, *args, **kwargs):
+    #     pass
+
+    def save(self, *args, **kwargs):
+        """
+        Automatically populate the rest of fields taking the appid
+        and also create an entry in Watchlist with the primary market.
+        Extracts the first batch of reviews from API and create the 
+        corresponding entries in the review tables
+        """
+        store = self.appid
+
+        super().save(*args, **kwargs)
 
 
 class AppStoreReview(models.Model):
