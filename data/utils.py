@@ -14,7 +14,9 @@ def _guess_store(appid):
     elif re.fullmatch(r"^(\w+\.){2,}\w+$", appid):
         return "PlayStore"
     else:
-        raise Exception("The appstore id you've provided is invalid.")
+        raise Exception(
+            "The app id you've provided cannot be found in that country's app store."
+        )
 
 
 def validate_appid(appid: str, country: str):
@@ -31,7 +33,7 @@ def validate_appid(appid: str, country: str):
             category = re.search(
                 '(?<="applicationCategory":").*?(?=")', res.text
             ).group(0)
-            return appname, publisher, category
+            return appname, store, publisher, category
         else:
             raise Exception(
                 "Did not receive a valid response. Response code", res.status_code
@@ -43,6 +45,6 @@ def validate_appid(appid: str, country: str):
             appname = appinfo["title"]
             publisher = appinfo["developer"]
             category = appinfo["genre"]
-            return appname, publisher, category
+            return appname, store, publisher, category
         except err as err:
             raise Exception("Did not receive a valid response.", err)

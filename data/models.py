@@ -19,6 +19,9 @@ class App(models.Model):
     class Meta:
         unique_together = ("appid", "primaryCountry")
 
+    def __str__(self):
+        return f"App {self.appName} on {self.store}"
+
     # def clean(self, *args, **kwargs):
     #     pass
 
@@ -29,8 +32,10 @@ class App(models.Model):
         Extracts the first batch of reviews from API and create the 
         corresponding entries in the review tables
         """
-        store = self.appid
 
+        self.appName, self.store, self.publisher, self.category = validate_appid(
+            self.appid, self.primaryCountry
+        )
         super().save(*args, **kwargs)
 
 
