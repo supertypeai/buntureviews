@@ -25,6 +25,12 @@ class App(models.Model):
     # def clean(self, *args, **kwargs):
     #     pass
 
+    def fill_data(self):
+        print("Filling data for", self.appid)
+        self.appName, self.store, self.publisher, self.category = validate_appid(
+            self.appid, self.primaryCountry
+        )
+
     def save(self, *args, **kwargs):
         """
         Automatically populate the rest of fields taking the appid

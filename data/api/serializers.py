@@ -7,6 +7,7 @@ class AppSerializer(serializers.ModelSerializer):
     class Meta:
         model = App
         fields = "__all__"
+        read_only_fields = ("appName", "store", "publisher", "category")
 
 
 class AppStoreReviewSerializer(serializers.ModelSerializer):
