@@ -6,7 +6,7 @@ from data.api.serializers import (
     AppStoreReviewSerializer,
     PlayStoreReviewSerializer,
 )
-from .models import App, AppStoreReview, PlayStoreReview
+from .models import App, AppStoreReview, PlayStoreReview, Customer, Watchlist
 
 
 class AppListCreate(generics.ListCreateAPIView):
@@ -23,4 +23,13 @@ class AppDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = App.objects.all()
     serializer_class = AppSerializer
     permission_classes = [IsAdminUser]
+
+
+class ReviewListCreate(generics.ListCreateAPIView):
+    """
+    List all reviews or add a new review
+    """
+
+    queryset = AppStoreReview.objects.all()
+    serializer_class = AppStoreReviewSerializer
 
