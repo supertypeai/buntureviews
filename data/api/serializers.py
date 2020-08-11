@@ -1,9 +1,10 @@
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
-
+import logging
 from ..models import App, AppStoreReview, PlayStoreReview
 
+logger = logging.getLogger(__name__)
 
 class AppSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,3 +50,33 @@ class AppStoreReviewSerializer(serializers.ModelSerializer):
 class PlayStoreReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlayStoreReview
+
+    def create(self, validated_data):
+        return super().create(validated_data)
+
+
+class AppStoreReviewBulkSerializer(serializers.ModelSerializer):
+    reviews = serializers.ListField(write_only=True)
+
+    def create(self, validated_data):
+        reviews = validated_data.pop("reviews")
+        review_instances = []
+        for review in reviews:
+            app_filter_data = App.objects.filter(id=int(review["app"]))
+            if not app_filter_data.exists():
+                raise serializers.ValidationError("App not found")
+            review["app"] = app_filter_data.first()
+            review_instances.append(AppStoreReview(**review))
+        try:
+            AppStoreReview.objects.bulk_create(review_instances)
+            return AppStoreReview.objects.all()[0]
+        except:
+            raise serializers.ValidationError("Internal Error")
+
+    class Meta:
+        model = AppStoreReview
+        fields = "__all__"
+        extra_kwargs = {
+            "reviews": {"write_only": True}
+        }
+        read_only_fields = ("author","version","rating","title","content","country","app",)

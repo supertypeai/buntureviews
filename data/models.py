@@ -55,7 +55,7 @@ class AppStoreReview(models.Model):
     title = models.CharField(blank=True, null=True, max_length=60)
     content = models.TextField()
     country = models.CharField(max_length=2)
-    app = models.ForeignKey("App", null=True, on_delete=models.SET_NULL)
+    app = models.ForeignKey(App, null=True, on_delete=models.SET_NULL)
 
 
 class PlayStoreReview(AppStoreReview):

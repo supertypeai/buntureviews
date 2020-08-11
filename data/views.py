@@ -1,10 +1,11 @@
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from rest_framework.permissions import IsAdminUser
 
 from data.api.serializers import (
     AppSerializer,
     AppStoreReviewSerializer,
     PlayStoreReviewSerializer,
+    AppStoreReviewBulkSerializer,
 )
 from .models import App, AppStoreReview, PlayStoreReview, Customer, Watchlist
 
@@ -32,4 +33,9 @@ class ReviewListCreate(generics.ListCreateAPIView):
 
     queryset = AppStoreReview.objects.all()
     serializer_class = AppStoreReviewSerializer
+
+
+class AppStoreReviewAPIView(generics.CreateAPIView):
+    queryset = PlayStoreReview.objects.all()
+    serializer_class = AppStoreReviewBulkSerializer
 

@@ -11,4 +11,9 @@ urlpatterns = [
         views.ReviewListCreate.as_view(),
         name="itunes-review-list-create",
     ),
+    path(
+        "reviews/appstore/",
+        views.AppStoreReviewAPIView.as_view(),
+        name="appstore-review-create",
+    ),
 ]
