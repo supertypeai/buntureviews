@@ -6,6 +6,10 @@ from .models import *
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "accountName")
 
+@admin.register(Watchlist)
+class WatchlistAdmin(admin.ModelAdmin):
+    pass
+
 @admin.register(App)
 class AppAdmin(admin.ModelAdmin):
     pass

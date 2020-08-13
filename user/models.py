@@ -61,7 +61,7 @@ class PermissionsMixin(models.Model):
             'explicitly assigning them.'
         ),
     )
-    role = models.ForeignKey(Group, related_name='g_users', null=True, on_delete=models.PROTECT)
+    role = models.ForeignKey(Group, related_name='g_users', blank=True, null=True, on_delete=models.PROTECT)
 
     class Meta:
         abstract = True

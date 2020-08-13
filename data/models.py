@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-from .utils import validate_appid
+from .utils import validate_appid, _guess_store
 import uuid
 
 
@@ -23,15 +23,6 @@ class App(models.Model):
     def __str__(self):
         return f"App {self.appName} on {self.store}"
 
-    # def clean(self, *args, **kwargs):
-    #     pass
-
-    # def fill_data(self):
-    #     print("Filling data for", self.appid)
-    #     self.appName, self.store, self.publisher, self.category = validate_appid(
-    #         self.appid, self.primaryCountry
-    #     )
-
     def save(self, *args, **kwargs):
         """
         Automatically populate the rest of fields taking the appid
@@ -45,6 +36,33 @@ class App(models.Model):
         )
         self.primaryCountry = self.primaryCountry.lower()
         super().save(*args, **kwargs)
+
+    
+    @classmethod
+    def create_multiple_app(cls, apps):
+        app_list = []
+        for app in apps:
+            if "app_id" not in app:
+                return False, "app_id not found"
+            
+            if "primary_country" not in app:
+                return False, "primary_country not found"
+
+            app_id, country = app["app_id"], app["primary_country"]
+            app_filter_data = cls.objects.filter(appid=app_id, primaryCountry=country)
+            if not app_filter_data.exists():
+                try:
+                    store_response = _guess_store(app_id)
+                    if store_response in ["AppStore", "PlayStore"]:
+                        app_instance = cls.objects.create(appid=app_id, primaryCountry=country)
+                        app_list.append(app_instance)
+                except:
+                    return False, "App not found in PlayStore or AppStore"
+            else:
+                app_list.append(app_filter_data.first())
+        
+        return True, app_list
+
 
 
 class AppStoreReview(models.Model):
@@ -88,7 +106,7 @@ class Customer(models.Model):
 
 
 class Watchlist(models.Model):
-    app = models.ManyToManyField("App")
+    apps = models.ManyToManyField(App)
     country = models.CharField(max_length=2)
     customer = models.ForeignKey("Customer", related_name="watch_lists", on_delete=models.CASCADE)
 

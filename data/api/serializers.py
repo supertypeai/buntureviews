@@ -24,9 +24,33 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 class WatchListSerializer(serializers.ModelSerializer):
+    apps = serializers.ListField(write_only=True)
+
+    def create(self, validated_data):
+        user = self.context.get("request").user
+        if user.customer is None:
+            raise serializers.ValidationError({"detail": "User customer profile not found"}, code=status.HTTP_404_NOT_FOUND)
+        customer = user.customer
+        apps = validated_data.pop("apps")
+        if len(apps) == 0:
+            raise serializers.ValidationError({"detail": "App list can't be empty"})
+
+        country = validated_data.get("country")
+        response, data = App.create_multiple_app(apps)
+        if response is False:
+            raise serializers.ValidationError({"detail": data}, code=status.HTTP_404_NOT_FOUND)
+
+        instance = Watchlist.objects.create(country=country, customer=customer)
+        instance.apps.set(data)
+        return instance
+
     class Meta:
         model = Watchlist
         fields = "__all__"
+        extra_kwargs = {
+            "apps": {"write_only": True},
+            "customer": {"read_only": True}
+        }
 
 
 class AppSerializer(serializers.ModelSerializer):

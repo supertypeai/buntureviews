@@ -20,6 +20,7 @@ class CustomerCreateAPIView(generics.CreateAPIView):
 class WatchlistAPIViewSet(viewsets.ModelViewSet):
     queryset = Watchlist.objects.all()
     serializer_class = WatchListSerializer
+    permission_classes = (IsAuthenticated,)
 
 
 class AppListCreate(generics.ListCreateAPIView):
