@@ -1,10 +1,37 @@
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
-import logging
-from ..models import App, AppStoreReview, PlayStoreReview
+from data.models import *
+from user.api.serializers import UserMinimalSerializer
+from user.models import User
+import logging, uuid
 
 logger = logging.getLogger(__name__)
+
+class CustomerSerializer(serializers.ModelSerializer):
+    user = UserMinimalSerializer()
+
+    def create(self, validated_data):
+        user = validated_data.pop("user")
+        password = str(uuid.uuid4().hex)
+        user = User.objects.create_user(username=user["username"], email=user["email"], password=password)
+        customer_instance = user.customer
+        if "accountName" in validated_data:
+            customer_instance.accountName = validated_data["accountName"]
+            customer_instance.save()
+
+        return customer_instance
+
+    class Meta:
+        model = Customer
+        fields = "__all__"
+
+
+class WatchListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Watchlist
+        fields = "__all__"
+
 
 class AppSerializer(serializers.ModelSerializer):
     class Meta:

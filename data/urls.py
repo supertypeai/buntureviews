@@ -1,7 +1,13 @@
-from django.urls import path
+from django.urls import path, re_path, include, reverse
+from rest_framework.routers import DefaultRouter
 from . import views
 
+router = DefaultRouter()
+
+router.register(r"watch-lists", views.WatchlistAPIViewSet, 'watch_lists')
+
 urlpatterns = [
+    path("customer/create", views.CustomerCreateAPIView.as_view()),
     path("app", views.AppListCreate.as_view()),
     # eg. http://127.0.0.1:8000/api/app/1
     path("app/<int:pk>", views.AppDetail.as_view()),
@@ -16,4 +22,5 @@ urlpatterns = [
         views.AppStoreReviewAPIView.as_view(),
         name="appstore-review-create",
     ),
+    re_path(r"^", include(router.urls)),
 ]

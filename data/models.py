@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from user.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -70,7 +70,13 @@ class PlayStoreReview(AppStoreReview):
 
 class Customer(models.Model):
     accountName = models.CharField(max_length=60)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, related_name="customer", on_delete=models.CASCADE)
+
+
+class Watchlist(models.Model):
+    app = models.ManyToManyField("App")
+    country = models.CharField(max_length=2)
+    customer = models.ForeignKey("Customer", related_name="watch_lists", on_delete=models.CASCADE)
 
 
 @receiver(post_save, sender=User)
@@ -84,8 +90,6 @@ def save_customer(sender, instance, **kwargs):
     instance.customer.save()
 
 
-class Watchlist(models.Model):
-    app = models.ManyToManyField("App")
-    country = models.CharField(max_length=2)
-    customer = models.ForeignKey("Customer", on_delete=models.CASCADE)
+
+
 

@@ -1,5 +1,5 @@
 from django.test import TestCase
-from django.contrib.auth import get_user_model
+from user.models import User
 from rest_framework.test import APIRequestFactory, APIClient, force_authenticate
 from .models import *
 from .api.serializers import *
@@ -28,7 +28,7 @@ APP_DATA = """
 class AppStoreReviewTest(TestCase):
     def setUp(self):
         self.client = APIClient()
-        user_model = get_user_model()
+        user_model = User
         self.user = user_model.objects.create_user(
             username="yin", password="1233456")
         
