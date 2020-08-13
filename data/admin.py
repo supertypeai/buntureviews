@@ -4,7 +4,7 @@ from .models import *
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("id", "user", "accountName")
 
 @admin.register(App)
 class AppAdmin(admin.ModelAdmin):
