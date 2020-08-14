@@ -8,7 +8,7 @@ class CustomerAdmin(admin.ModelAdmin):
 
 @admin.register(Watchlist)
 class WatchlistAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("id", "country", "customer",)
 
 @admin.register(App)
 class AppAdmin(admin.ModelAdmin):
@@ -16,7 +16,7 @@ class AppAdmin(admin.ModelAdmin):
 
 @admin.register(AppStoreReview)
 class AppStoreReviewAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("id", "author", "version", "rating", "title", "app")
 
 
 @admin.register(PlayStoreReview)

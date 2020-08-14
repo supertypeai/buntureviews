@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-from .utils import validate_appid, _guess_store
+from .utils import validate_appid, _guess_store, create_review_data
 import uuid
 
 
@@ -51,13 +51,17 @@ class App(models.Model):
             app_id, country = app["app_id"], app["primary_country"]
             app_filter_data = cls.objects.filter(appid=app_id, primaryCountry=country)
             if not app_filter_data.exists():
-                try:
-                    store_response = _guess_store(app_id)
-                    if store_response in ["AppStore", "PlayStore"]:
-                        app_instance = cls.objects.create(appid=app_id, primaryCountry=country)
-                        app_list.append(app_instance)
-                except:
-                    return False, "App not found in PlayStore or AppStore"
+                #try:
+                store_response = _guess_store(app_id)
+                if store_response in ["AppStore", "PlayStore"]:
+                    app_instance = cls.objects.create(appid=app_id, primaryCountry=country)
+                    review_create_response = create_review_data(app_id, country, store_response, app_instance)
+                    if review_create_response is False:
+                        #app_instance.delete()
+                        return False, "Review not created, try again!"
+                    app_list.append(app_instance)
+                # except:
+                #     return False, "App not found in PlayStore or AppStore"
             else:
                 app_list.append(app_filter_data.first())
         
@@ -90,6 +94,9 @@ class PlayStoreReview(AppStoreReview):
 class Customer(models.Model):
     accountName = models.CharField(max_length=60)
     user = models.OneToOneField(User, related_name="customer", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.username
 
     @classmethod
     def create_customer(cls, validated_data):
