@@ -62,3 +62,14 @@ Created client id & client secret need to use in time of login, keep it safe. If
   ```
 
 * Watch List API: `http://localhost:8000/api/v1/watch-lists/`
+  data format:
+  ```
+{
+    "country": "bn",
+    "apps": [
+        {"app_id": "id1497887150", "primary_country": "us"},
+        {"app_id": "id1497753150", "primary_country": "bn"}
+        {"app_id": "id1497456150", "primary_country": "gb"}
+    ]
+}
+  ```
