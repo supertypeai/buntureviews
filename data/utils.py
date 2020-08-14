@@ -54,36 +54,61 @@ def validate_appid(appid: str, country: str):
         except err as err:
             raise Exception("Did not receive a valid response.", err)
 
- 
+
+def fetch_data_from_app_store(country, app_id, n):
+    url = f"https://itunes.apple.com/{country}/rss/customerreviews/id={app_id}/page={n}/sortBy=mostRecent/json"
+    res = requests.get(url)
+    review_data = res.json()
+
+    return review_data
 
 def create_review_data(app_id, country, store_type, app_instance):
     country, app_id, review_create_response = country.lower(), app_id[2:], False
     review_list = []
     logger.critical("started working")
     if store_type == "AppStore":
-        url = f"https://itunes.apple.com/{country}/rss/customerreviews/id={app_id}/page=1/sortBy=mostRecent/json"
-        res = requests.get(url)
-        review_data = res.json()
+        review_data = fetch_data_from_app_store(country, app_id, 1)
+        if "entry" not in review_data["feed"]:
+            return 404, "Review not found" 
         reviews = review_data["feed"]["entry"]
         first_link = review_data["feed"]["link"][2]["attributes"]["href"]
         last_link = review_data["feed"]["link"][3]["attributes"]["href"]
 
-        for review in reviews:
-            review_obj = {
-                "author": review["author"]["name"]["label"],
-                "version": review["im:version"]["label"],
-                "rating": review["im:rating"]["label"],
-                "title": review["title"]["label"],
-                "content": review["content"]["label"],
-                "country": country,
-                "app": app_instance
-            }
-            AppStoreReview = get_model_class('data', 'appstorereview')
-            review_list.append(AppStoreReview(**review_obj))
+        start_number = int(first_link.split("/")[6].split("=")[1])
+        last_number = int(last_link.split("/")[6].split("=")[1])
+
+        AppStoreReview = get_model_class('data', 'appstorereview')
+
+        break_review = False
+
+        for n in range(start_number, last_number+1):
+            for review in reviews:
+                review_obj = {
+                    "author": review["author"]["name"]["label"],
+                    "version": review["im:version"]["label"],
+                    "rating": review["im:rating"]["label"],
+                    "title": review["title"]["label"],
+                    "content": review["content"]["label"],
+                    "country": country,
+                    "app": app_instance
+                }
+                review_list.append(AppStoreReview(**review_obj))
+
+                if len(review_list) >=500:
+                    break_review = True
+                    break
+            
+            if break_review is True:
+                break
+            
+            if n < last_number:
+                review_data = fetch_data_from_app_store(country, app_id, n+1)
+                reviews = review_data["feed"]["entry"] if "entry" in review_data["feed"] else []
+
         AppStoreReview.objects.bulk_create(review_list)
         review_create_response = True
         
     
-    return review_create_response
+    return 201, review_create_response
         
 

@@ -55,13 +55,16 @@ class App(models.Model):
                 store_response = _guess_store(app_id)
                 if store_response in ["AppStore", "PlayStore"]:
                     app_instance = cls.objects.create(appid=app_id, primaryCountry=country)
-                    review_create_response = create_review_data(app_id, country, store_response, app_instance)
-                    if review_create_response is False:
-                        #app_instance.delete()
+                    review_create_response, data = create_review_data(app_id, country, store_response, app_instance)
+                    if review_create_response == 404:
+                        pass
+                    elif review_create_response == 400:
+                        app_instance.delete()
                         return False, "Review not created, try again!"
-                    app_list.append(app_instance)
+                    elif review_create_response == 201:
+                        app_list.append(app_instance)
                 # except:
-                #     return False, "App not found in PlayStore or AppStore"
+                #     return False, "Internal Error"
             else:
                 app_list.append(app_filter_data.first())
         
@@ -70,12 +73,12 @@ class App(models.Model):
 
 
 class AppStoreReview(models.Model):
-    author = models.CharField(max_length=60)
-    version = models.CharField(max_length=10)
+    author = models.CharField(max_length=120)
+    version = models.CharField(max_length=15)
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
-    title = models.CharField(blank=True, null=True, max_length=60)
+    title = models.CharField(blank=True, null=True, max_length=200)
     content = models.TextField()
     country = models.CharField(max_length=2)
     app = models.ForeignKey(App, null=True, on_delete=models.SET_NULL)
