@@ -17,10 +17,10 @@ urlpatterns = [
         views.ReviewListCreate.as_view(),
         name="itunes-review-list-create",
     ),
-    # path(
-    #     "reviews/appstore/",
-    #     views.AppStoreReviewAPIView.as_view(),
-    #     name="appstore-review-create",
-    # ),
+    path(
+        "mail-check/",
+        views.EmailCheckAPIView.as_view(),
+        name="mail-check",
+    ),
     re_path(r"^", include(router.urls)),
 ]

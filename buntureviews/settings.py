@@ -14,6 +14,7 @@ import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+Temp_Path = os.path.realpath('.')
 
 
 # Quick-start development settings - unsuitable for production
@@ -26,6 +27,9 @@ SECRET_KEY = "^fr=)&y&r!67+9c#n@i3rt0is#-v-xlg=t9v*2ylcyacal-vi1"
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+#Email configuration
+# For mail configuration create local_setting.py file in buntureviews folder and set configuration
 
 
 # Application definition
@@ -60,7 +64,7 @@ ROOT_URLCONF = "buntureviews.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'buntureviews/templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -131,6 +135,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = "/static/"
+# TEMPLATE_DIRS = (
+#     Temp_Path +"/templates",
+# )
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -164,3 +171,9 @@ CORS_ALLOW_HEADERS = (
     'dnt',
     'user-agent',
 )
+
+
+try:
+    from buntureviews.local_settings import *
+except:
+    pass

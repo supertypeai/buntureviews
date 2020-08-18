@@ -6,6 +6,7 @@ from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from .utils import validate_appid, _guess_store, create_review_data
+from common.mails.mail_base import EmailHandler
 import uuid
 
 
@@ -121,6 +122,18 @@ class Customer(models.Model):
         password = str(uuid.uuid4().hex)
         user_instance = User.objects.create_user(username=user["username"], email=user["email"], password=password)
         customer_instance = cls.objects.create(user=user_instance, accountName=validated_data.get("accountName"))
+
+        mail_body = {
+            "USERNAME": customer_instance.user.username,
+            "USER_EMAIL": customer_instance.user.email,
+            "PASSWORD_URL": "localhost:8080/password-reset"
+        }
+        try:
+            mail_handler = EmailHandler("Customer account created", mail_body, [customer_instance.user.email,])
+            response = mail_handler.customer_login_email()
+        except:
+            pass
+        
 
         return True, customer_instance
 

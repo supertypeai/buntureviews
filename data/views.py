@@ -1,5 +1,7 @@
-from rest_framework import generics, viewsets
+from django.core.mail import send_mail
+from rest_framework import generics, viewsets, views
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
 from data.api.serializers import (
     CustomerSerializer,
@@ -10,6 +12,7 @@ from data.api.serializers import (
     AppStoreReviewBulkSerializer,
 )
 from .models import App, AppStoreReview, Customer, Watchlist
+from common.mails.mail_base import EmailHandler
 
 
 class CustomerCreateAPIView(generics.CreateAPIView):
@@ -48,7 +51,22 @@ class ReviewListCreate(generics.ListCreateAPIView):
     serializer_class = AppStoreReviewSerializer
 
 
-# class AppStoreReviewAPIView(generics.CreateAPIView):
-#     queryset = PlayStoreReview.objects.all()
-#     serializer_class = AppStoreReviewBulkSerializer
+class EmailCheckAPIView(views.APIView):
+    def get(self, request, format=None):
+        message = ""
+        try:
+            mail_body = {
+                "USERNAME": "devadmin",
+                "USER_EMAIL": "faltu-kaj@boximail.com",
+                "PASSWORD_URL": "localhost:8080/password-reset"
+            }
+            mail_handler = EmailHandler("Test mail subject", mail_body, ["rongbong@boximail.com",])
+            response = mail_handler.customer_login_email()
+            message = "Email send successfully" if response is True else "Email not sent!"    
+        except:
+            message = "Email internal error"
+        
+        return Response({"message": message})
+        
+        
 
