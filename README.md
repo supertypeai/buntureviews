@@ -7,6 +7,17 @@
 * To start virtual environment, run `source venv/bin/activate`
 * Install all dependency library from requirements.txt file by this command `pip install -r requirements.txt`
 * Create a DB of PostgreSQL in your local machine and update the information in `buntureviews/settings.py` file
+  - The current `settings.py` file assume we have a postgres user named `devadmin`,, so unless you've update this file to specify otherwise, you may have to create it:
+
+    ```psql
+    # create user devadmin with db creation privileges
+    CREATE USER devadmin WITH PASSWORD 'Ninjacoder**08' CREATEDB;
+
+    # create database
+    CREATE DATABASE buntureviews;
+    ```
+
+
 * For migration run `python manage.py migrate`
 * To create a superuser run `python manage.py createsuperuser` and provide username, email and password
 

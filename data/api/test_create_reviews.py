@@ -11,7 +11,7 @@ def function_fixture():
 
 TEST_SIZE = 10
 
-
+# this is not actually executed, it's just a fixture
 @pytest.fixture
 def appstorereview():
     return AppStoreReview.objects.create(
