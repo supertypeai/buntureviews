@@ -94,12 +94,12 @@ class AppStoreReviewSerializer(serializers.ModelSerializer):
 #         fields = "__all__"
 
 
-class PlayStoreReviewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PlayStoreReview
+# class PlayStoreReviewSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = PlayStoreReview
 
-    def create(self, validated_data):
-        return super().create(validated_data)
+#     def create(self, validated_data):
+#         return super().create(validated_data)
 
 
 class AppStoreReviewBulkSerializer(serializers.ModelSerializer):

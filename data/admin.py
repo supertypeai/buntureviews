@@ -21,4 +21,4 @@ class AppStoreReviewAdmin(admin.ModelAdmin):
 
 @admin.register(PlayStoreReview)
 class PlayStoreReviewAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("id", "author", "version", "rating", "app")

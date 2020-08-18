@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
-from google_play_scraper import app
+from google_play_scraper import app, reviews_all, Sort
 import requests, re, logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +64,10 @@ def fetch_data_from_app_store(country, app_id, n):
     return review_data
 
 def create_review_data(app_id, country, store_type, app_instance):
-    country, app_id, review_create_response = country.lower(), app_id[2:], False
+    country, review_create_response = country.lower(), False
     review_list = []
-    logger.critical("started working")
     if store_type == "AppStore":
+        app_id = app_id[2:]
         review_data = fetch_data_from_app_store(country, app_id, 1)
         if "entry" not in review_data["feed"]:
             return 404, "Review not found" 
@@ -106,6 +107,36 @@ def create_review_data(app_id, country, store_type, app_instance):
                 reviews = review_data["feed"]["entry"] if "entry" in review_data["feed"] else []
 
         AppStoreReview.objects.bulk_create(review_list)
+        review_create_response = True
+    elif store_type == "PlayStore":
+        PlayStoreReview = get_model_class('data', 'playstorereview')
+        try:
+            reviews = reviews_all(app_id, country=country, sort=Sort.MOST_RELEVANT)
+        except expression as identifier:
+            reviews = []
+        
+        if len(reviews) <=0 :
+            return 400, "Review not found"
+        review_list = []
+        for review in reviews:
+            review_obj = {
+                "author": review["userName"],
+                "version": review["reviewCreatedVersion"],
+                "rating": review["score"],
+                "title": "",
+                "content": review["content"],
+                "country": country,
+                "app": app_instance,
+                "authorImg": review["userImage"],
+                "reviewedAt": review["at"],
+                "replyContent": review["replyContent"],
+                "repliedAt": review["repliedAt"],
+                "reviewId": review["reviewId"],
+                "thumbsUpCount": review["thumbsUpCount"]
+            }
+            review_list.append(PlayStoreReview(**review_obj))
+
+        PlayStoreReview.objects.bulk_create(review_list)
         review_create_response = True
         
     

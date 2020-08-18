@@ -6,10 +6,10 @@ from data.api.serializers import (
     WatchListSerializer,
     AppSerializer,
     AppStoreReviewSerializer,
-    PlayStoreReviewSerializer,
+    #PlayStoreReviewSerializer,
     AppStoreReviewBulkSerializer,
 )
-from .models import App, AppStoreReview, PlayStoreReview, Customer, Watchlist
+from .models import App, AppStoreReview, Customer, Watchlist
 
 
 class CustomerCreateAPIView(generics.CreateAPIView):
@@ -48,7 +48,7 @@ class ReviewListCreate(generics.ListCreateAPIView):
     serializer_class = AppStoreReviewSerializer
 
 
-class AppStoreReviewAPIView(generics.CreateAPIView):
-    queryset = PlayStoreReview.objects.all()
-    serializer_class = AppStoreReviewBulkSerializer
+# class AppStoreReviewAPIView(generics.CreateAPIView):
+#     queryset = PlayStoreReview.objects.all()
+#     serializer_class = AppStoreReviewBulkSerializer
 
