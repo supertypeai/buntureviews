@@ -1,6 +1,7 @@
 from django.db import models
 from user.models import User
 from django.db.models.signals import post_save
+from django.utils.translation import ugettext_lazy as _
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -51,44 +52,53 @@ class App(models.Model):
             app_id, country = app["app_id"], app["primary_country"]
             app_filter_data = cls.objects.filter(appid=app_id, primaryCountry=country)
             if not app_filter_data.exists():
-                #try:
                 store_response = _guess_store(app_id)
                 if store_response in ["AppStore", "PlayStore"]:
                     app_instance = cls.objects.create(appid=app_id, primaryCountry=country)
-                    review_create_response, data = create_review_data(app_id, country, store_response, app_instance)
-                    if review_create_response == 404:
-                        pass
-                    elif review_create_response == 400:
+                    try:
+                        review_create_response, data = create_review_data(app_id, country, store_response, app_instance)
+                        if review_create_response == 404:
+                            pass
+                        elif review_create_response == 400:
+                            app_instance.delete()
+                            return False, "Review not created, try again!"
+                        elif review_create_response == 201:
+                            app_list.append(app_instance)
+                    except expression as identifier:
                         app_instance.delete()
-                        return False, "Review not created, try again!"
-                    elif review_create_response == 201:
-                        app_list.append(app_instance)
-                # except:
-                #     return False, "Internal Error"
+                        return False, "Internal Error"
             else:
                 app_list.append(app_filter_data.first())
         
         return True, app_list
 
 
-
-class AppStoreReview(models.Model):
-    author = models.CharField(max_length=120)
-    version = models.CharField(max_length=15)
+class AppReviewBaseAbstract(models.Model):
+    author = models.CharField(max_length=120, blank=True, null=True)
+    version = models.CharField(max_length=15, blank=True, null=True)
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     title = models.CharField(blank=True, null=True, max_length=200)
-    content = models.TextField()
-    country = models.CharField(max_length=2)
+    content = models.TextField(blank=True,null=True)
+    country = models.CharField(max_length=2, blank=True, null=True)
     app = models.ForeignKey(App, null=True, on_delete=models.SET_NULL)
 
+    class Meta:
+        abstract = True
 
-class PlayStoreReview(AppStoreReview):
-    authorImg = models.URLField()
+
+class AppStoreReview(AppReviewBaseAbstract):
+    pass
+
+
+class PlayStoreReview(AppReviewBaseAbstract):
+    authorImg = models.URLField(null=True)
     reviewedAt = models.DateTimeField()
-    replyContent = models.TextField()
-    repliedAt = models.DateTimeField()
+    replyContent = models.TextField(blank=True, null=True)
+    repliedAt = models.DateTimeField(blank=True, null=True)
+    reviewId = models.CharField(_("Review ID"), max_length=220, blank=True, null=True)
+    thumbsUpCount = models.IntegerField(default=0)
 
     class Meta:
         ordering = ["-reviewedAt"]
