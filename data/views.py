@@ -8,7 +8,7 @@ from data.api.serializers import (
     WatchListSerializer,
     AppSerializer,
     AppStoreReviewSerializer,
-    #PlayStoreReviewSerializer,
+    # PlayStoreReviewSerializer,
     AppStoreReviewBulkSerializer,
 )
 from .models import App, AppStoreReview, Customer, Watchlist
@@ -57,16 +57,18 @@ class EmailCheckAPIView(views.APIView):
         try:
             mail_body = {
                 "USERNAME": "devadmin",
-                "USER_EMAIL": "faltu-kaj@boximail.com",
-                "PASSWORD_URL": "localhost:8080/password-reset"
+                "USER_EMAIL": "rongbong@boximail.com",
+                "PASSWORD_URL": "localhost:8080/password-reset",
             }
-            mail_handler = EmailHandler("Test mail subject", mail_body, ["rongbong@boximail.com",])
+            mail_handler = EmailHandler(
+                "Test mail subject", mail_body, ["rongbong@boximail.com",]
+            )
             response = mail_handler.customer_login_email()
-            message = "Email send successfully" if response is True else "Email not sent!"    
+            message = (
+                "Email send successfully" if response is True else "Email not sent!"
+            )
         except:
             message = "Email internal error"
-        
+
         return Response({"message": message})
-        
-        
 

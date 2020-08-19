@@ -1,5 +1,4 @@
 {
-    "python.pythonPath": "/home/samuel/.virtualenvs/appreviews/bin/python",
     "python.linting.flake8Enabled": false,
     "python.linting.enabled": true,
     "python.formatting.provider": "black",
