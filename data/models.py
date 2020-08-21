@@ -26,27 +26,19 @@ class App(models.Model):
         return f"App {self.appName} on {self.store}"
 
     def save(self, *args, **kwargs):
-        """
-        Automatically populate the rest of fields taking the appid
-        and also create an entry in Watchlist with the primary market.
-        Extracts the first batch of reviews from API and create the 
-        corresponding entries in the review tables
-        """
+        response = validate_appid(self.appid, self.primaryCountry)
+        if response is not None and self.id is None:
+            self.appName, self.store, self.publisher, self.category = response
+            self.primaryCountry = self.primaryCountry.lower()
+            super().save(*args, **kwargs)
 
-        self.appName, self.store, self.publisher, self.category = validate_appid(
-            self.appid, self.primaryCountry
-        )
-        self.primaryCountry = self.primaryCountry.lower()
-        super().save(*args, **kwargs)
-
-    
     @classmethod
     def create_multiple_app(cls, apps):
         app_list = []
         for app in apps:
             if "app_id" not in app:
                 return False, "app_id not found"
-            
+
             if "primary_country" not in app:
                 return False, "primary_country not found"
 
@@ -55,9 +47,13 @@ class App(models.Model):
             if not app_filter_data.exists():
                 store_response = _guess_store(app_id)
                 if store_response in ["AppStore", "PlayStore"]:
-                    app_instance = cls.objects.create(appid=app_id, primaryCountry=country)
+                    app_instance = cls.objects.create(
+                        appid=app_id, primaryCountry=country
+                    )
                     try:
-                        review_create_response, data = create_review_data(app_id, country, store_response, app_instance)
+                        review_create_response, data = create_review_data(
+                            app_id, country, store_response, app_instance
+                        )
                         if review_create_response == 404:
                             pass
                         elif review_create_response == 400:
@@ -70,7 +66,7 @@ class App(models.Model):
                         return False, "Internal Error"
             else:
                 app_list.append(app_filter_data.first())
-        
+
         return True, app_list
 
 
@@ -81,9 +77,11 @@ class AppReviewBaseAbstract(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     title = models.CharField(blank=True, null=True, max_length=200)
-    content = models.TextField(blank=True,null=True)
+    content = models.TextField(blank=True, null=True)
     country = models.CharField(max_length=2, blank=True, null=True)
-    app = models.ForeignKey(App, null=True, on_delete=models.SET_NULL)
+    app = models.ForeignKey(
+        App, related_name="%(class)s_reviews", null=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         abstract = True
@@ -118,22 +116,27 @@ class Customer(models.Model):
         user_filter_data = User.objects.filter(username=user["username"])
         if user_filter_data.exists():
             return False, "User already exists"
-        
+
         password = str(uuid.uuid4().hex)
-        user_instance = User.objects.create_user(username=user["username"], email=user["email"], password=password)
-        customer_instance = cls.objects.create(user=user_instance, accountName=validated_data.get("accountName"))
+        user_instance = User.objects.create_user(
+            username=user["username"], email=user["email"], password=password
+        )
+        customer_instance = cls.objects.create(
+            user=user_instance, accountName=validated_data.get("accountName")
+        )
 
         mail_body = {
             "USERNAME": customer_instance.user.username,
             "USER_EMAIL": customer_instance.user.email,
-            "PASSWORD_URL": "localhost:8080/password-reset"
+            "PASSWORD_URL": "localhost:8080/password-reset",
         }
         try:
-            mail_handler = EmailHandler("Customer account created", mail_body, [customer_instance.user.email,])
+            mail_handler = EmailHandler(
+                "Customer account created", mail_body, [customer_instance.user.email,]
+            )
             response = mail_handler.customer_login_email()
         except:
             pass
-        
 
         return True, customer_instance
 
@@ -141,7 +144,9 @@ class Customer(models.Model):
 class Watchlist(models.Model):
     apps = models.ManyToManyField(App)
     country = models.CharField(max_length=2)
-    customer = models.ForeignKey("Customer", related_name="watch_lists", on_delete=models.CASCADE)
+    customer = models.ForeignKey(
+        "Customer", related_name="watch_lists", on_delete=models.CASCADE
+    )
 
 
 # @receiver(post_save, sender=User)
@@ -153,8 +158,4 @@ class Watchlist(models.Model):
 # @receiver(post_save, sender=User)
 # def save_customer(sender, instance, **kwargs):
 #     instance.customer.save()
-
-
-
-
 

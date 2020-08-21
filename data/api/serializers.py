@@ -3,11 +3,13 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework import status
 from data.models import *
+from data.utils import *
 from user.api.serializers import UserMinimalSerializer
 from user.models import User
 import logging, uuid
 
 logger = logging.getLogger(__name__)
+
 
 class CustomerSerializer(serializers.ModelSerializer):
     user = UserMinimalSerializer()
@@ -15,7 +17,9 @@ class CustomerSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         response, data = Customer.create_customer(validated_data)
         if response is False:
-            raise serializers.ValidationError({"detail": data}, code=status.HTTP_404_NOT_FOUND)
+            raise serializers.ValidationError(
+                {"detail": data}, code=status.HTTP_404_NOT_FOUND
+            )
         return data
 
     class Meta:
@@ -24,12 +28,23 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 class WatchListSerializer(serializers.ModelSerializer):
+    customer = serializers.SerializerMethodField()
+    total_apps = serializers.SerializerMethodField()
     apps = serializers.ListField(write_only=True)
+
+    def get_customer(self, model):
+        return {"id": model.customer.id, "username": model.customer.user.username}
+
+    def get_total_apps(self, model):
+        return model.apps.count()
 
     def create(self, validated_data):
         user = self.context.get("request").user
         if user.customer is None:
-            raise serializers.ValidationError({"detail": "User customer profile not found"}, code=status.HTTP_404_NOT_FOUND)
+            raise serializers.ValidationError(
+                {"detail": "User customer profile not found"},
+                code=status.HTTP_404_NOT_FOUND,
+            )
         customer = user.customer
         apps = validated_data.pop("apps")
         if len(apps) == 0:
@@ -38,7 +53,9 @@ class WatchListSerializer(serializers.ModelSerializer):
         country = validated_data.get("country")
         response, data = App.create_multiple_app(apps)
         if response is False:
-            raise serializers.ValidationError({"detail": data}, code=status.HTTP_404_NOT_FOUND)
+            raise serializers.ValidationError(
+                {"detail": data}, code=status.HTTP_404_NOT_FOUND
+            )
 
         instance = Watchlist.objects.create(country=country, customer=customer)
         instance.apps.set(data)
@@ -49,15 +66,86 @@ class WatchListSerializer(serializers.ModelSerializer):
         fields = "__all__"
         extra_kwargs = {
             "apps": {"write_only": True},
-            "customer": {"read_only": True}
+            "customer": {"read_only": True},
+            "total_apps": {"read_only": True},
         }
 
 
+class WatchListDetailUpdateSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        customer = instance.customer
+        apps, app_list = instance.apps.all(), []
+        for app in apps:
+            app_dict = {
+                "id": app.id,
+                "appid": app.appid,
+                "primaryCountry": app.primaryCountry,
+                "appName": app.appName,
+                "store": app.store,
+                "total_review": app.playstorereview_reviews.count()
+                if app.store == "PlayStore"
+                else app.appstorereview_reviews.count(),
+            }
+            app_list.append(app_dict)
+        return {
+            "id": instance.id,
+            "country": instance.country,
+            "customer": {
+                "id": customer.id,
+                "username": customer.user.username,
+                "email": customer.user.email,
+                "accountName": customer.accountName,
+            },
+            "apps": app_list,
+        }
+
+    def update(self, instance, validated_data):
+        apps = validated_data.pop("apps")
+        instance.country = validated_data.get("country", instance.country)
+
+        instance.save()
+        return instance
+
+    class Meta:
+        model = Watchlist
+        fields = "__all__"
+        read_only_fields = ("customer",)
+
+
 class AppSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        similar = None
+        if "similar" in validated_data:
+            similar = validated_data.pop("similar")
+        try:
+            validation_response = validate_appid(
+                validated_data["appid"], validated_data["primaryCountry"]
+            )
+            if validation_response is None:
+                raise serializers.ValidationError({"error": "Internal Error"})
+
+            instance = App(
+                appid=validated_data["appid"],
+                primaryCountry=validated_data["primaryCountry"],
+            )
+            instance.save()
+            if similar is not None and len(similar) > 0:
+                instance.similar.set(similar)
+                instance.save()
+            return instance
+        except:
+            raise serializers.ValidationError({"error": "Internal Error"})
+
     class Meta:
         model = App
         fields = "__all__"
         read_only_fields = ("appName", "store", "publisher", "category")
+
+
+class AppFlatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = App
+        fields = ("id", "appName", "store", "primaryCountry")
 
 
 class BulkCreateListSerializer(serializers.ListSerializer):
@@ -123,7 +211,13 @@ class AppStoreReviewBulkSerializer(serializers.ModelSerializer):
     class Meta:
         model = AppStoreReview
         fields = "__all__"
-        extra_kwargs = {
-            "reviews": {"write_only": True}
-        }
-        read_only_fields = ("author","version","rating","title","content","country","app",)
+        extra_kwargs = {"reviews": {"write_only": True}}
+        read_only_fields = (
+            "author",
+            "version",
+            "rating",
+            "title",
+            "content",
+            "country",
+            "app",
+        )

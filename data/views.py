@@ -3,14 +3,7 @@ from rest_framework import generics, viewsets, views
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from data.api.serializers import (
-    CustomerSerializer,
-    WatchListSerializer,
-    AppSerializer,
-    AppStoreReviewSerializer,
-    # PlayStoreReviewSerializer,
-    AppStoreReviewBulkSerializer,
-)
+from data.api.serializers import *
 from .models import App, AppStoreReview, Customer, Watchlist
 from common.mails.mail_base import EmailHandler
 
@@ -24,6 +17,17 @@ class WatchlistAPIViewSet(viewsets.ModelViewSet):
     queryset = Watchlist.objects.all()
     serializer_class = WatchListSerializer
     permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        customer = user.customer
+        return Watchlist.objects.filter(customer=customer)
+
+    def get_serializer_class(self):
+        if self.action == "list" or self.action == "create":
+            return WatchListSerializer
+        else:
+            return WatchListDetailUpdateSerializer
 
 
 class AppListCreate(generics.ListCreateAPIView):

@@ -5,9 +5,11 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
 def get_model_class(app_label, model_name):
     model = ContentType.objects.get(app_label=app_label, model=model_name)
     return model.model_class()
+
 
 def _guess_store(appid):
     """
@@ -41,9 +43,7 @@ def validate_appid(appid: str, country: str):
             ).group(0)
             return appname, store, publisher, category
         else:
-            raise Exception(
-                "Did not receive a valid response. Response code", res.status_code
-            )
+            return None
 
     if store == "PlayStore":
         try:
@@ -52,8 +52,8 @@ def validate_appid(appid: str, country: str):
             publisher = appinfo["developer"]
             category = appinfo["genre"]
             return appname, store, publisher, category
-        except err as err:
-            raise Exception("Did not receive a valid response.", err)
+        except:
+            return None
 
 
 def fetch_data_from_app_store(country, app_id, n):
@@ -63,6 +63,7 @@ def fetch_data_from_app_store(country, app_id, n):
 
     return review_data
 
+
 def create_review_data(app_id, country, store_type, app_instance):
     country, review_create_response = country.lower(), False
     review_list = []
@@ -70,7 +71,7 @@ def create_review_data(app_id, country, store_type, app_instance):
         app_id = app_id[2:]
         review_data = fetch_data_from_app_store(country, app_id, 1)
         if "entry" not in review_data["feed"]:
-            return 404, "Review not found" 
+            return 404, "Review not found"
         reviews = review_data["feed"]["entry"]
         first_link = review_data["feed"]["link"][2]["attributes"]["href"]
         last_link = review_data["feed"]["link"][3]["attributes"]["href"]
@@ -78,11 +79,11 @@ def create_review_data(app_id, country, store_type, app_instance):
         start_number = int(first_link.split("/")[6].split("=")[1])
         last_number = int(last_link.split("/")[6].split("=")[1])
 
-        AppStoreReview = get_model_class('data', 'appstorereview')
+        AppStoreReview = get_model_class("data", "appstorereview")
 
         break_review = False
 
-        for n in range(start_number, last_number+1):
+        for n in range(start_number, last_number + 1):
             for review in reviews:
                 review_obj = {
                     "author": review["author"]["name"]["label"],
@@ -91,31 +92,35 @@ def create_review_data(app_id, country, store_type, app_instance):
                     "title": review["title"]["label"],
                     "content": review["content"]["label"],
                     "country": country,
-                    "app": app_instance
+                    "app": app_instance,
                 }
                 review_list.append(AppStoreReview(**review_obj))
 
-                if len(review_list) >=500:
+                if len(review_list) >= 500:
                     break_review = True
                     break
-            
+
             if break_review is True:
                 break
-            
+
             if n < last_number:
-                review_data = fetch_data_from_app_store(country, app_id, n+1)
-                reviews = review_data["feed"]["entry"] if "entry" in review_data["feed"] else []
+                review_data = fetch_data_from_app_store(country, app_id, n + 1)
+                reviews = (
+                    review_data["feed"]["entry"]
+                    if "entry" in review_data["feed"]
+                    else []
+                )
 
         AppStoreReview.objects.bulk_create(review_list)
         review_create_response = True
     elif store_type == "PlayStore":
-        PlayStoreReview = get_model_class('data', 'playstorereview')
+        PlayStoreReview = get_model_class("data", "playstorereview")
         try:
             reviews = reviews_all(app_id, country=country, sort=Sort.MOST_RELEVANT)
         except expression as identifier:
             reviews = []
-        
-        if len(reviews) <=0 :
+
+        if len(reviews) <= 0:
             return 400, "Review not found"
         review_list = []
         for review in reviews:
@@ -132,14 +137,12 @@ def create_review_data(app_id, country, store_type, app_instance):
                 "replyContent": review["replyContent"],
                 "repliedAt": review["repliedAt"],
                 "reviewId": review["reviewId"],
-                "thumbsUpCount": review["thumbsUpCount"]
+                "thumbsUpCount": review["thumbsUpCount"],
             }
             review_list.append(PlayStoreReview(**review_obj))
 
         PlayStoreReview.objects.bulk_create(review_list)
         review_create_response = True
-        
-    
+
     return 201, review_create_response
-        
 
