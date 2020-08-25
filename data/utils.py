@@ -118,7 +118,7 @@ def create_review_data(app_id, country, store_type, app_instance):
         PlayStoreReview = get_model_class("data", "playstorereview")
         try:
             reviews = reviews_all(app_id, country=country, sort=Sort.MOST_RELEVANT)
-        except expression as identifier:
+        except:
             reviews = []
 
         if len(reviews) <= 0:
@@ -174,7 +174,7 @@ def sink_app_review():
                     "title": "",
                     "content": review["content"],
                     "country": country,
-                    "app": app_instance,
+                    "app": app,
                     "authorImg": review["userImage"],
                     "reviewedAt": review["at"],
                     "replyContent": review["replyContent"],
@@ -218,7 +218,7 @@ def sink_app_review():
                         "content": review["content"]["label"],
                         "appid": review["id"]["label"],
                         "country": country,
-                        "app": app_instance,
+                        "app": app,
                     }
                     review_list.append(AppStoreReview(**review_obj))
 
@@ -241,4 +241,6 @@ def sink_app_review():
                 logger.info("AppStore review sinked successfully")
             else:
                 logger.info("Review not found for new sink")
+
+    return 200, "App review sink is done"
 
