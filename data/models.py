@@ -88,7 +88,7 @@ class AppReviewBaseAbstract(models.Model):
 
 
 class AppStoreReview(AppReviewBaseAbstract):
-    pass
+    appid = models.CharField(null=True, max_length=220)
 
 
 class PlayStoreReview(AppReviewBaseAbstract):

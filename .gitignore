@@ -1,4 +1,9 @@
 __pycache__
 .pytest_cache
 local_settings.py
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+celerybeat.pid
+celerybeat-schedule
 misc

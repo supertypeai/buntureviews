@@ -91,6 +91,7 @@ def create_review_data(app_id, country, store_type, app_instance):
                     "rating": review["im:rating"]["label"],
                     "title": review["title"]["label"],
                     "content": review["content"]["label"],
+                    "appid": review["id"]["label"],
                     "country": country,
                     "app": app_instance,
                 }
@@ -145,4 +146,99 @@ def create_review_data(app_id, country, store_type, app_instance):
         review_create_response = True
 
     return 201, review_create_response
+
+
+def sink_app_review():
+    App = get_model_class("data", "app")
+    PlayStoreReview = get_model_class("data", "playstorereview")
+    AppStoreReview = get_model_class("data", "appstorereview")
+    apps = App.objects.all()
+    if len(apps) == 0:
+        return 200, "App not found"
+    for app in apps:
+        store, app_id, country = app.store, app.appid, app.primaryCountry
+        if store == "PlayStore":
+            reviews = reviews_all(app_id, country=country, sort=Sort.MOST_RELEVANT)
+            review_list = []
+            for review in reviews:
+                reviewId = review["reviewId"]
+                playstore_filter_data = PlayStoreReview.objects.filter(
+                    reviewId=reviewId
+                )
+                if playstore_filter_data.exists():
+                    continue
+                review_obj = {
+                    "author": review["userName"],
+                    "version": review["reviewCreatedVersion"],
+                    "rating": review["score"],
+                    "title": "",
+                    "content": review["content"],
+                    "country": country,
+                    "app": app_instance,
+                    "authorImg": review["userImage"],
+                    "reviewedAt": review["at"],
+                    "replyContent": review["replyContent"],
+                    "repliedAt": review["repliedAt"],
+                    "reviewId": review["reviewId"],
+                    "thumbsUpCount": review["thumbsUpCount"],
+                }
+                review_list.append(PlayStoreReview(**review_obj))
+
+            if len(review_list) > 0:
+                PlayStoreReview.objects.bulk_create(review_list)
+                logger.info("Playstore Review sinked successfully")
+            else:
+                logger.info("Playstore Review not found for new sinked")
+        elif store == "AppStore":
+            app_id = app_id[2:]
+            review_data = fetch_data_from_app_store(country, app_id, 1)
+            if "entry" not in review_data["feed"]:
+                logger.info("AppStore Review not found")
+                continue
+            reviews = review_data["feed"]["entry"]
+            first_link = review_data["feed"]["link"][2]["attributes"]["href"]
+            last_link = review_data["feed"]["link"][3]["attributes"]["href"]
+
+            start_number = int(first_link.split("/")[6].split("=")[1])
+            last_number = int(last_link.split("/")[6].split("=")[1])
+            break_review = False
+            review_list = []
+            for n in range(start_number, last_number + 1):
+                for review in reviews:
+                    appstore_filter_data = AppStoreReview.objects.filter(
+                        appid=review["id"]["label"]
+                    )
+                    if appstore_filter_data.exists():
+                        continue
+                    review_obj = {
+                        "author": review["author"]["name"]["label"],
+                        "version": review["im:version"]["label"],
+                        "rating": review["im:rating"]["label"],
+                        "title": review["title"]["label"],
+                        "content": review["content"]["label"],
+                        "appid": review["id"]["label"],
+                        "country": country,
+                        "app": app_instance,
+                    }
+                    review_list.append(AppStoreReview(**review_obj))
+
+                    if len(review_list) >= 500:
+                        break_review = True
+                        break
+
+                if break_review is True:
+                    break
+
+                if n < last_number:
+                    review_data = fetch_data_from_app_store(country, app_id, n + 1)
+                    reviews = (
+                        review_data["feed"]["entry"]
+                        if "entry" in review_data["feed"]
+                        else []
+                    )
+            if len(review_list) > 0:
+                AppStoreReview.objects.bulk_create(review_list)
+                logger.info("AppStore review sinked successfully")
+            else:
+                logger.info("Review not found for new sink")
 
