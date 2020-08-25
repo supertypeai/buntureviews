@@ -14,7 +14,7 @@ sys_logger = logging.getLogger(__name__)
 
 
 @periodic_task(
-    run_every=(crontab(hour=2, minute=56)), name="sink_reviews", ignore_result=True,
+    run_every=(crontab(hour=1, minute=00)), name="sink_reviews", ignore_result=True,
 )
 def sink_reviews():
     logger.info("Started review sinking")
