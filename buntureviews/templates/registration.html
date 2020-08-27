@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-7 col-sm-12">
+            <div class="w-100 mt-5">
+                <h4 class="text-center">Welcome to Buntureview</h4>
+                <div class="w-100 pl-5 pr-5 pt-5">
+                    <p>It is a long established fact that a reader will be distracted by the readable content of a page
+                        when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal
+                        distribution of letters, as opposed to using 'Content here, content here'</p>
+                    <p>It is a long established fact that a reader will be distracted by the readable content of a page
+                        when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal
+                        distribution of letters, as opposed to using 'Content here, content here'</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5 col-sm-12">
+            <div class="w-100 mt-5 pl-5 pr-5">
+                <h4 class="text-center">Create Account</h4>
+                <form action="" class="mt-4">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-12 col-sm-12">
+                            <label for="first_name">First Name <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control is-invalid" id="first_name" placeholder="First Name"
+                                required>
+                            <div class="invalid-feedback">
+                                First Name can't be empty.
+                            </div>
+                        </div>
+                        <div class="col-lg-6  col-md-12 col-sm-12">
+                            <label for="last_name">Last Name <span class="text-danger">*</span></label>
+                            <input type="last_name" class="form-control is-invalid" id="last_name"
+                                placeholder="Last Name" required>
+                            <div class="invalid-feedback">
+                                Last Name can't be empty.
+                            </div>
+                        </div>
+                        <div class="col-lg-6  col-md-12 col-sm-12">
+                            <label for="first_name">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control is-invalid" id="first_name" placeholder="First Name"
+                                required>
+                            <div class="invalid-feedback">
+                                Please provide a valid email.
+                            </div>
+                        </div>
+                        <div class="col-lg-6  col-md-12 col-sm-12">
+                            <label for="password">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control is-invalid" id="password" required>
+                            <div class="invalid-feedback">
+                                Please provide a valid password
+                            </div>
+                        </div>
+                        <div class="col-lg-6  col-md-12 col-sm-12">
+                            <label for="confirm_password">Confirm Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control is-invalid" id="confirm_password" required>
+                            <div class="invalid-feedback">
+                                Password & confirm password must have to be same
+                            </div>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <div class="form-group">
+                                <button class="btn btn-secondary w-100">Register</button>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

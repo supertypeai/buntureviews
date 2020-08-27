@@ -150,6 +150,10 @@ STATIC_URL = "/static/"
 #     Temp_Path +"/templates",
 # )
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "buntureviews/static"),
+]
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
