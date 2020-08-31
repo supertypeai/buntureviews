@@ -15,16 +15,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls import url
 from django.conf import settings
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required, permission_required
 from user.views import *
 
 urlpatterns = [
-    path("", HomeView.as_view(), name="home"),
-    path("admin/", admin.site.urls),
-    path("registration", RegistrationView.as_view(), name="registration"),
-    path("login", LoginView.as_view(), name="login"),
-    path("logout", LogoutView.as_view(), name="logout"),
+    path("", home, name="home"),
+    url(r"^about/$", AboutView.as_view(), name="about"),
+    url(r"^login/$", auth_views.LoginView.as_view(), name="login"),
+    url(r"^logout/$", auth_views.LogoutView.as_view(), name="logout"),
+    url(r"^registration/$", RegistrationView.as_view(), name="registration"),
+    path("accounts/", include("django.contrib.auth.urls")),
+    url("admin/", admin.site.urls),
     # API URLs
     path("api-auth/", include("rest_framework.urls")),
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),

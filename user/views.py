@@ -7,6 +7,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.views import View
+from django.template import loader
 from django.urls import reverse
 from rest_framework import views, viewsets
 from user.forms.login import LoginForm
@@ -19,8 +20,21 @@ class HomeView(LoginRequiredMixin, TemplateView):
     template_name = "home.html"
 
 
+@login_required
+def home(request):
+    text = " welcome to Home"
+    template = loader.get_template("home.html")
+    context = {"text": text}
+    return HttpResponse(template.render(context, request))
+
+
+class AboutView(LoginRequiredMixin, TemplateView):
+    login_url = "/login"
+    template_name = "about.html"
+
+
 class RegistrationView(TemplateView):
-    template_name = "registration.html"
+    template_name = "registration/registration.html"
 
 
 class LogoutView(TemplateView):
@@ -51,3 +65,4 @@ class LoginView(FormView):
                 login(request, user)
                 return HttpResponseRedirect(reverse("home"))
             return HttpResponseRedirect(reverse("login"))
+
