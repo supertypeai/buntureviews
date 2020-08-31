@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
+from django.contrib.auth.decorators import login_required, permission_required
 from user.views import *
 
 urlpatterns = [
@@ -23,6 +24,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("registration", RegistrationView.as_view(), name="registration"),
     path("login", LoginView.as_view(), name="login"),
+    path("logout", LogoutView.as_view(), name="logout"),
     # API URLs
     path("api-auth/", include("rest_framework.urls")),
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),

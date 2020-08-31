@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "data",
     "user",
+    "crispy_forms",
 ]
 
 MIDDLEWARE = [
@@ -71,6 +72,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "buntureviews.urls"
+CRISPY_TEMPLATE_PACK = "bootstrap4"
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "/login"
 
 TEMPLATES = [
     {
