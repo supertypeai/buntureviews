@@ -19,11 +19,25 @@
             </div>
         </div>
         <div class="col-lg-4 col-md-6 col-sm-12">
-            <div class="w-100 mt-5 pl-5 pr-5">
-                <h4 class="text-center">Create Account</h4>
-                <form action="/login" method="post" class="mt-4">
+            <div class="w-100 mt-5 pl-xl-5 pr-xl-5 pl-lg-4 pl-md-5 pl-sm-1 pr-xl-5 pr-sm-1 pr-md-5">
+
+                <h4 class="text-center">Login Account</h4>
+                {% if errors %}
+                <div class="alert alert-danger text-center mt-3">
+                    {{ errors }}
+                </div>
+                {% endif %}
+                <form action="/login/" method="post" class="mt-4">
                     {% csrf_token %}
-                    {{ form|crispy }}
+
+                    <div class="form-row">
+                        <div class="form-group col-md-12 mb-0">
+                            {{ form.email|as_crispy_field }}
+                        </div>
+                        <div class="form-group col-md-12 mb-0">
+                            {{ form.password|as_crispy_field }}
+                        </div>
+                    </div>
                     <div class="form-group">
                         <p>New User? <a href="{% url 'registration' %}">Click</a></p>
                     </div>

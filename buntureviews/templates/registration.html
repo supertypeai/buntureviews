@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% crispy form form.helper %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row">
@@ -18,42 +21,45 @@
         <div class="col-md-5 col-sm-12">
             <div class="w-100 mt-5 pl-5 pr-5">
                 <h4 class="text-center">Create Account</h4>
-                <form action="" class="mt-4">
+                {% if errors %}
+                <div class="alert alert-danger text-center mt-3">
+                    {{ errors }}
+                </div>
+                {% endif %}
+                {% if success %}
+                <div class="alert alert-success text-center mt-3">
+                    {{ success }}
+                </div>
+                {% endif %}
+                <form action="/registration/" method="POST" class="mt-4">
+                    {% csrf_token %}
                     <div class="row">
                         <div class="col-lg-6 col-md-12 col-sm-12">
-                            <label for="first_name">First Name <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control is-invalid" id="first_name" placeholder="First Name"
-                                required>
+                            {{ form.first_name|as_crispy_field }}
                             <div class="invalid-feedback">
                                 First Name can't be empty.
                             </div>
                         </div>
                         <div class="col-lg-6  col-md-12 col-sm-12">
-                            <label for="last_name">Last Name <span class="text-danger">*</span></label>
-                            <input type="last_name" class="form-control is-invalid" id="last_name"
-                                placeholder="Last Name" required>
+                            {{ form.last_name|as_crispy_field }}
                             <div class="invalid-feedback">
                                 Last Name can't be empty.
                             </div>
                         </div>
                         <div class="col-lg-6  col-md-12 col-sm-12">
-                            <label for="first_name">Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control is-invalid" id="first_name" placeholder="First Name"
-                                required>
+                            {{ form.email|as_crispy_field }}
                             <div class="invalid-feedback">
                                 Please provide a valid email.
                             </div>
                         </div>
                         <div class="col-lg-6  col-md-12 col-sm-12">
-                            <label for="password">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control is-invalid" id="password" required>
+                            {{ form.password|as_crispy_field }}
                             <div class="invalid-feedback">
                                 Please provide a valid password
                             </div>
                         </div>
                         <div class="col-lg-6  col-md-12 col-sm-12">
-                            <label for="confirm_password">Confirm Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control is-invalid" id="confirm_password" required>
+                            {{ form.confirm_password|as_crispy_field }}
                             <div class="invalid-feedback">
                                 Password & confirm password must have to be same
                             </div>

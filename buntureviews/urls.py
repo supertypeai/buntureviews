@@ -19,15 +19,15 @@ from django.conf.urls import url
 from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required, permission_required
-from user.views import *
+from user import views as user_views
 
 urlpatterns = [
-    path("", home, name="home"),
-    url(r"^about/$", AboutView.as_view(), name="about"),
-    url(r"^login/$", auth_views.LoginView.as_view(), name="login"),
-    url(r"^logout/$", auth_views.LogoutView.as_view(), name="logout"),
-    url(r"^registration/$", RegistrationView.as_view(), name="registration"),
-    path("accounts/", include("django.contrib.auth.urls")),
+    path("", user_views.home, name="home"),
+    url(r"^about/$", user_views.AboutView.as_view(), name="about"),
+    url(r"^login/$", user_views.login, name="login"),
+    url(r"^logout/$", user_views.LogoutView.as_view(), name="logout"),
+    url(r"^registration/$", user_views.registration, name="registration"),
+    # path("accounts/", include("django.contrib.auth.urls")),
     url("admin/", admin.site.urls),
     # API URLs
     path("api-auth/", include("rest_framework.urls")),
