@@ -16,6 +16,8 @@ from django.urls import reverse
 from rest_framework import views, viewsets
 from user.forms.login import LoginForm
 from user.forms.registration import RegistrationForm
+from user.forms.password_reset.reset_init import ResetInitForm
+from user.forms.password_reset.password_change import PasswordChangeForm
 from user.models import User
 from data.models import Customer
 from user.token import get_token
@@ -61,6 +63,8 @@ def login(request):
         context["form_errors"] = form.errors
         return render(request, "login.html", context)
     elif request.method == "GET":
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse("home"))
         form = LoginForm()
         return render(request, "login.html", {"form": form})
 
@@ -69,6 +73,8 @@ def registration(request):
     context = {}
 
     if request.method == "GET":
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse("home"))
         form = RegistrationForm()
         context["form"] = form
         return render(request, "registration.html", context)
@@ -118,7 +124,6 @@ def registration(request):
 def account_activate(request, **kwargs):
     context = {}
     if request.method == "GET":
-        print(kwargs)
         uid = kwargs["uidb64"]
         token = kwargs["token"]
         try:
@@ -141,6 +146,97 @@ def account_activate(request, **kwargs):
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
         return render(request, "account_active.html", context)
+
+
+def password_reset(request):
+    context = {}
+    if request.method == "GET":
+        form = ResetInitForm()
+        context["form"] = form
+        return render(request, "password_reset_init.html", context)
+    elif request.method == "POST":
+        form = ResetInitForm(request.POST)
+        if form.is_valid():
+            email = request.POST["email"]
+            user_filter_data = User.objects.filter(email=email)
+            if not user_filter_data.exists():
+                context["errors"] = "User not found"
+            else:
+                response, data = User.send_password_reset_link(user_filter_data.first())
+                if response is False:
+                    context["errors"] = data
+                else:
+                    context["success"] = data
+            form = ResetInitForm()
+            context["form"] = form
+        else:
+            context["errors"] = "Form is not valid"
+
+        return render(request, "password_reset_init.html", context)
+
+
+def password_change(request, **kwargs):
+    context = {}
+    if request.method == "GET":
+        uid = kwargs["uidb64"]
+        token = kwargs["token"]
+        context["submission_link"] = "/password/change/" + uid + "/done/"
+
+        try:
+            uid = force_text(urlsafe_base64_decode(uid))
+            user_filter_data = User.objects.filter(id=uid)
+
+            if not user_filter_data.exists():
+                context["errors"] = "User not found"
+                return render(request, "password_change.html", context)
+            else:
+                user = user_filter_data.first()
+                if get_token.check_token(user, token):
+                    context["form"] = PasswordChangeForm()
+
+                    return render(request, "password_change.html", context)
+                else:
+                    context["errors"] = "Password Reset link invalid"
+                    return render(request, "password_change.html", context)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+        return render(request, "password_change.html", context)
+    elif request.method == "POST":
+        uid = kwargs["uidb64"]
+
+        try:
+            uid = force_text(urlsafe_base64_decode(uid))
+            user_filter_data = User.objects.filter(id=uid)
+            if not user_filter_data.exists():
+                context["errors"] = "User not found"
+                return render(request, "password_change.html", context)
+            else:
+                user = user_filter_data.first()
+                form = PasswordChangeForm(request.POST)
+                password = request.POST["password"]
+                confirm_password = request.POST["confirm_password"]
+
+                if confirm_password != password:
+                    context["errors"] = "Password & Confirm Password is not same"
+                    context["form"] = PasswordChangeForm()
+                    return render(request, "password_change.html", context)
+                else:
+                    user.set_password(password)
+                    user.save()
+                    context[
+                        "success"
+                    ] = "Your password reset successfully, login with new password"
+                    context["form"] = PasswordChangeForm()
+                    return render(request, "password_change.html", context)
+
+                return render(request, "password_change.html", context)
+
+            return render(request, "password_change.html", context)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+            context["errors"] = "Internal Error"
+            context["form"] = PasswordChangeForm()
+            return render(request, "password_change.html", context)
 
 
 class AboutView(LoginRequiredMixin, TemplateView):

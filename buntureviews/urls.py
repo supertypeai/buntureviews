@@ -32,6 +32,17 @@ urlpatterns = [
         user_views.account_activate,
         name="activate",
     ),
+    url(r"^password/reset/$", user_views.password_reset, name="reset_password"),
+    url(
+        r"^password/change/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$",
+        user_views.password_change,
+        name="change_password",
+    ),
+    url(
+        r"^password/change/(?P<uidb64>[0-9A-Za-z_\-]+)/done/$",
+        user_views.password_change,
+        name="change_password_done",
+    ),
     # path("accounts/", include("django.contrib.auth.urls")),
     url("admin/", admin.site.urls),
     # API URLs

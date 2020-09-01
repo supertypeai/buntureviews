@@ -12,6 +12,29 @@ class EmailHandler:
         self.mail_body = mail_body
         self.to_mail = to_mail
 
+    def user_password_reset_email(self):
+        try:
+            # plaintext_context = Context(autoescape=False)  # HTML escaping not appropriate in plaintext
+            subject = render_to_string("mails/password_reset_sub.txt", self.mail_body)
+            text_body = render_to_string(
+                "mails/password_reset_body.txt", self.mail_body
+            )
+            html_body = render_to_string(
+                "mails/user_password_reset.html", self.mail_body
+            )
+            # send_mail(self.mail_subject, message, self.from_mail, self.to_mail)
+            msg = EmailMultiAlternatives(
+                subject=self.mail_subject,
+                from_email=self.from_mail,
+                to=self.to_mail,
+                body=text_body,
+            )
+            msg.attach_alternative(html_body, "text/html")
+            msg.send()
+            return True
+        except:
+            return False
+
     def customer_login_email(self):
         try:
             # plaintext_context = Context(autoescape=False)  # HTML escaping not appropriate in plaintext
