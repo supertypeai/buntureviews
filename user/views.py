@@ -6,6 +6,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login as auth_login, logout
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.utils.encoding import force_bytes, force_text
 from django.views import View
 from django.template import loader
 from django.contrib import messages
@@ -15,6 +18,7 @@ from user.forms.login import LoginForm
 from user.forms.registration import RegistrationForm
 from user.models import User
 from data.models import Customer
+from user.token import get_token
 
 # Create your views here.
 
@@ -84,15 +88,6 @@ def registration(request):
                 context["errors"] = "User email already exists"
                 return render(request, "registration.html", context)
             else:
-                if first_name is None or len(first_name) == 0:
-                    context["errors"] = "First Name can't be empty"
-                    return render(request, "registration.html", context)
-                if last_name is None or len(last_name) == 0:
-                    context["errors"] = "Last Name can't be empty"
-                    return render(request, "registration.html", context)
-                if password != confirm_password:
-                    context["errors"] = "Password & Confirmation password is not same"
-                    return render(request, "registration.html", context)
                 data_obj = {
                     "first_name": first_name,
                     "last_name": last_name,
@@ -100,21 +95,52 @@ def registration(request):
                     "username": email,
                     "is_active": False,
                     "is_staff": False,
+                    "password": password,
+                    "confirm_password": confirm_password,
                 }
-                instance = User.objects.create(**data_obj)
-                instance.set_password(password)
-                instance.save()
+                print(data_obj)
 
-                customer = Customer(user=instance, accountName=instance.username).save()
-
-                context[
-                    "success"
-                ] = "Account activation link has been sent to your email. Please active account before login"
-                form = RegistrationForm()
-                context["form"] = form
-                return render(request, "registration.html", context)
+                response, data = Customer.create_customer(data_obj)
+                if response is False:
+                    context["errors"] = data
+                    return render(request, "registration.html", context)
+                else:
+                    context[
+                        "success"
+                    ] = "Account activation link has been sent to your email. Please active account before login"
+                    form = RegistrationForm()
+                    context["form"] = form
+                    return render(request, "registration.html", context)
 
         return render(request, "registration.html", context)
+
+
+def account_activate(request, **kwargs):
+    context = {}
+    if request.method == "GET":
+        print(kwargs)
+        uid = kwargs["uidb64"]
+        token = kwargs["token"]
+        try:
+            uid = force_text(urlsafe_base64_decode(uid))
+            user_filter_data = User.objects.filter(id=uid)
+            if not user_filter_data.exists():
+                context["error"] = "User not found"
+                return render(request, "account_active.html", context)
+            else:
+                user = user_filter_data.first()
+                if get_token.check_token(user, token):
+                    user.is_active = True
+                    user.save()
+                    context["success"] = "Your account successfully activated"
+                    context["user"] = user
+                    return render(request, "account_active.html", context)
+                else:
+                    context["error"] = "Activation link invalid"
+                    return render(request, "account_active.html", context)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+        return render(request, "account_active.html", context)
 
 
 class AboutView(LoginRequiredMixin, TemplateView):

@@ -4,9 +4,12 @@ from django.db.models.signals import post_save
 from django.utils.translation import ugettext_lazy as _
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.conf import settings
 from .utils import validate_appid, _guess_store, create_review_data
 from common.mails.mail_base import EmailHandler
+from user.token import get_token
 import uuid
 
 
@@ -112,23 +115,40 @@ class Customer(models.Model):
 
     @classmethod
     def create_customer(cls, validated_data):
-        user = validated_data.pop("user")
-        user_filter_data = User.objects.filter(username=user["username"])
+        password = validated_data.pop("password")
+        confirm_password = validated_data.pop("confirm_password")
+
+        print(password)
+
+        user_filter_data = User.objects.filter(username=validated_data["username"])
         if user_filter_data.exists():
             return False, "User already exists"
+        if (
+            validated_data["first_name"] is None
+            or len(validated_data["first_name"]) == 0
+        ):
+            return False, "First Name can't be empty"
+        if validated_data["last_name"] is None or len(validated_data["last_name"]) == 0:
+            return False, "Last Name can't be empty"
 
-        password = str(uuid.uuid4().hex)
-        user_instance = User.objects.create_user(
-            username=user["username"], email=user["email"], password=password
-        )
+        if password != confirm_password:
+            return False, "Password & Confirmation password is not same"
+
+        user_instance = User.objects.create(**validated_data)
+        user_instance.set_password(password)
+        user_instance.save()
+
         customer_instance = cls.objects.create(
-            user=user_instance, accountName=validated_data.get("accountName")
+            user=user_instance, accountName=user_instance.username
         )
+        uid = urlsafe_base64_encode(force_bytes(user_instance.id))
+        token = get_token.make_token(user_instance)
+        active_url = "localhost:8000" + "/activate/" + uid + "/" + token
 
         mail_body = {
             "USERNAME": customer_instance.user.username,
             "USER_EMAIL": customer_instance.user.email,
-            "PASSWORD_URL": "localhost:8080/password-reset",
+            "ACTIVATION_URL": active_url,
         }
         try:
             mail_handler = EmailHandler(

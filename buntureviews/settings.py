@@ -76,6 +76,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "/login"
 APPEND_SLASH = True
+BASE_URL = "localhost:8000"
 
 TEMPLATES = [
     {
