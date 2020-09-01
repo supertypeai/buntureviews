@@ -151,6 +151,8 @@ def account_activate(request, **kwargs):
 def password_reset(request):
     context = {}
     if request.method == "GET":
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse("home"))
         form = ResetInitForm()
         context["form"] = form
         return render(request, "password_reset_init.html", context)

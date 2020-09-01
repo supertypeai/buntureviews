@@ -1,4 +1,6 @@
+from django.shortcuts import render
 from django.core.mail import send_mail
+from django.contrib.auth.decorators import login_required
 from rest_framework import generics, viewsets, views
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -6,6 +8,15 @@ from rest_framework.response import Response
 from data.api.serializers import *
 from .models import App, AppStoreReview, Customer, Watchlist
 from common.mails.mail_base import EmailHandler
+from data.forms.application import AddApplicationForm
+
+
+@login_required(login_url="/login/")
+def add_application(request):
+    context = {}
+    if request.method == "GET":
+        context["form"] = AddApplicationForm()
+        return render(request, "addApplication.html", context)
 
 
 class CustomerCreateAPIView(generics.CreateAPIView):

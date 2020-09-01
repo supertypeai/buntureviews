@@ -1,6 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container-fluid">
-    <h4 class="text-center mt-4">Hello <b>{{request.user.email}}</b>{{text}}</h4>
+<div class="container-fluid h-100 p-0 m-0">
+    <div class="row h-100 p-0 m-0">
+        <div class="col-md-3 col-lg-3" id="watchlist">
+            <h5 class="text-center mt-4 mb-3"><b>Watch List</b></h5>
+            <ul class="list-group">
+                <li class="list-group-item" id="addWatchList"><a href="{% url 'add_application' %}"
+                        class="text-center"><span><i class="fas fa-plus"></i></span>
+                        <span>Add Application</span></a></li>
+                <li class="list-group-item watchLists"><a href="#" class="text-center"><span class="mr-2"><i
+                                class="fab fa-apple"></i></span> <span>Dapibus ac facilisis in</span></a></li>
+
+                <li class="list-group-item watchLists"><a href="#" class="text-center"><span class="mr-2"><i
+                                class="fab fa-google-play"></i></span> <span>Dapibus ac facilisis in</span></a></li>
+            </ul>
+        </div>
+        <div class="col-md-9 col-lg-9">
+            {% block application_function %}
+            {% endblock %}
+        </div>
+    </div>
 </div>
 {% endblock %}

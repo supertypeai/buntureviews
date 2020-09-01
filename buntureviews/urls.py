@@ -20,6 +20,7 @@ from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required, permission_required
 from user import views as user_views
+from data import views as data_views
 
 urlpatterns = [
     path("", user_views.home, name="home"),
@@ -43,6 +44,7 @@ urlpatterns = [
         user_views.password_change,
         name="change_password_done",
     ),
+    url(r"^add-application/$", data_views.add_application, name="add_application"),
     # path("accounts/", include("django.contrib.auth.urls")),
     url("admin/", admin.site.urls),
     # API URLs

@@ -1,0 +1,29 @@
+#watchlist h5{
+    color: #404040;
+}
+
+#watchlist ul li a{
+    display: block;
+    text-decoration: none;
+}
+
+#addWatchList{
+    background: #00b377;
+    border: 1px solid #00b377;
+    color: #fff;
+}
+
+#addWatchList a{
+    color: #fff;
+}
+
+#addWatchList:hover{
+    border: 1px solid #00b377;
+}
+
+.watchLists{
+    background: #f2f2f2;
+}
+.watchLists a{
+    color: #666666;
+}
