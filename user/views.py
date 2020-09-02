@@ -19,7 +19,7 @@ from user.forms.registration import RegistrationForm
 from user.forms.password_reset.reset_init import ResetInitForm
 from user.forms.password_reset.password_change import PasswordChangeForm
 from user.models import User
-from data.models import Customer
+from data.models import Customer, Watchlist
 from user.token import get_token
 
 # Create your views here.
@@ -32,10 +32,23 @@ class HomeView(LoginRequiredMixin, TemplateView):
 
 @login_required(login_url="/login/")
 def home(request):
-    text = " welcome to Home"
     template = loader.get_template("home.html")
-    context = {"text": text}
-    return HttpResponse(template.render(context, request))
+    context, customer = {}, None
+    try:
+        customer = request.user.customer
+    except:
+        pass
+
+    context["customer"] = customer
+    if customer is not None:
+        watchlist_filter_data = Watchlist.objects.filter(customer=customer)
+        if not watchlist_filter_data.exists():
+            pass
+        else:
+            apps = watchlist_filter_data.first().apps.all()
+            context["apps"] = apps
+
+    return render(request, "home.html", context)
 
 
 def login(request):

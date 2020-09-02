@@ -10,7 +10,9 @@ from django.conf import settings
 from .utils import validate_appid, _guess_store, create_review_data
 from common.mails.mail_base import EmailHandler
 from user.token import get_token
-import uuid
+import uuid, logging
+
+logger = logging.getLogger(__name__)
 
 
 class App(models.Model):
@@ -57,14 +59,16 @@ class App(models.Model):
                         review_create_response, data = create_review_data(
                             app_id, country, store_response, app_instance
                         )
-                        if review_create_response == 404:
+
+                        logger.critical(review_create_response, data)
+                        if review_create_response == 404 and data is False:
                             pass
-                        elif review_create_response == 400:
+                        elif review_create_response == 400 and data is False:
                             app_instance.delete()
                             return False, "Review not created, try again!"
-                        elif review_create_response == 201:
+                        elif review_create_response == 201 and data is True:
                             app_list.append(app_instance)
-                    except expression as identifier:
+                    except:
                         app_instance.delete()
                         return False, "Internal Error"
             else:
@@ -164,8 +168,8 @@ class Customer(models.Model):
 class Watchlist(models.Model):
     apps = models.ManyToManyField(App)
     country = models.CharField(max_length=2)
-    customer = models.ForeignKey(
-        "Customer", related_name="watch_lists", on_delete=models.CASCADE
+    customer = models.OneToOneField(
+        Customer, related_name="watchlist", null=True, on_delete=models.CASCADE
     )
 
 

@@ -122,7 +122,7 @@ def create_review_data(app_id, country, store_type, app_instance):
             reviews = []
 
         if len(reviews) <= 0:
-            return 400, "Review not found"
+            return 400, False
         review_list = []
         for review in reviews:
             review_obj = {
@@ -143,6 +143,7 @@ def create_review_data(app_id, country, store_type, app_instance):
             review_list.append(PlayStoreReview(**review_obj))
 
         PlayStoreReview.objects.bulk_create(review_list)
+        logger.critical("Created")
         review_create_response = True
 
     return 201, review_create_response

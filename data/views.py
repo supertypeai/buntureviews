@@ -13,8 +13,20 @@ from data.forms.application import AddApplicationForm
 
 @login_required(login_url="/login/")
 def add_application(request):
-    context = {}
+    context, customer = {}, None
+    try:
+        customer = request.user.customer
+    except:
+        pass
+    context["customer"] = customer
     if request.method == "GET":
+        if customer is not None:
+            watchlist_filter_data = Watchlist.objects.filter(customer=customer)
+        if not watchlist_filter_data.exists():
+            pass
+        else:
+            apps = watchlist_filter_data.first().apps.all()
+            context["apps"] = apps
         context["form"] = AddApplicationForm()
         return render(request, "addApplication.html", context)
 
