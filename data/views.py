@@ -31,8 +31,7 @@ class WatchlistAPIViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        customer = user.customer
-        return Watchlist.objects.filter(customer=customer)
+        return Watchlist.objects.filter(customer__user=user)
 
     def get_serializer_class(self):
         if self.action == "list" or self.action == "create":
