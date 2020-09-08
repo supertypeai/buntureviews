@@ -55,6 +55,10 @@ class App(models.Model):
                     app_instance = cls.objects.create(
                         appid=app_id, primaryCountry=country
                     )
+
+                    if app_instance is None:
+                        continue
+
                     try:
                         review_create_response, data = create_review_data(
                             app_id, country, store_response, app_instance
@@ -62,10 +66,10 @@ class App(models.Model):
 
                         logger.critical(review_create_response, data)
                         if review_create_response == 404 and data is False:
-                            pass
+                            continue
                         elif review_create_response == 400 and data is False:
                             app_instance.delete()
-                            return False, "Review not created, try again!"
+                            continue
                         elif review_create_response == 201 and data is True:
                             app_list.append(app_instance)
                     except:

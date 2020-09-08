@@ -64,6 +64,11 @@ class WatchListSerializer(serializers.ModelSerializer):
                 {"detail": data}, code=status.HTTP_404_NOT_FOUND
             )
 
+        if response is True and len(data) == 0:
+            raise serializers.ValidationError(
+                {"detail": "App list is empty"}, code=status.HTTP_404_NOT_FOUND
+            )
+
         instance = None
         try:
             instance = customer.watchlist
@@ -72,10 +77,10 @@ class WatchListSerializer(serializers.ModelSerializer):
 
         if instance is None:
             instance = Watchlist.objects.create(country=country, customer=customer)
-        else:
-            old_data = [app for app in instance.apps.all()]
-            instance.apps.clear()
-            data = old_data + data
+        # else:
+        #     old_data = [app for app in instance.apps.all()]
+        #     instance.apps.clear()
+        #     data = old_data + data
 
         if len(data) > 0:
             instance.apps.set(data)

@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect, HttpResponse
+from django.urls import reverse
 from rest_framework import generics, viewsets, views
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -28,6 +30,53 @@ def add_application(request):
             apps = watchlist_filter_data.first().apps.all()
             context["apps"] = apps
         context["form"] = AddApplicationForm()
+        return render(request, "addApplication.html", context)
+    elif request.method == "POST":
+        form = AddApplicationForm(request.POST)
+        context["form"] = form
+        if form.is_valid():
+            app_id = request.POST["app_id"]
+            country = request.POST["country"]
+            apps = [{"app_id": app_id, "primary_country": country}]
+            response, data = App.create_multiple_app(apps)
+            appName = data[0].appName
+            if response is False:
+                context["error"] = data
+            if response is True and len(data) == 0:
+                context["error"] = "App list is empty"
+
+            if response is True and len(data) > 0 and customer is not None:
+                instance = None
+                try:
+                    instance = customer.watchlist
+                except:
+                    instance = None
+
+                if instance is None:
+                    instance = Watchlist.objects.create(
+                        country=country, customer=customer
+                    )
+
+                old_data = [app for app in instance.apps.all()]
+                instance.apps.clear()
+                data = old_data + data
+                instance.apps.set(data)
+
+                context["success"] = "App '{0}' added in watchlist".format(appName)
+                context["form"] = AddApplicationForm()
+                apps = instance.apps.all()
+                context["apps"] = apps
+                return render(request, "addApplication.html", context)
+            else:
+                apps = instance.apps.all()
+                context["apps"] = apps
+                return render(request, "addApplication.html", context)
+        else:
+            watchlist_filter_data = Watchlist.objects.filter(customer=customer)
+            apps = watchlist_filter_data.first().apps.all()
+            context["apps"] = apps
+            return render(request, "addApplication.html", context)
+
         return render(request, "addApplication.html", context)
 
 

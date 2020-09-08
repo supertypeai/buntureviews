@@ -46,14 +46,15 @@ def validate_appid(appid: str, country: str):
             return None
 
     if store == "PlayStore":
-        try:
-            appinfo = app(appid, country=country)
-            appname = appinfo["title"]
-            publisher = appinfo["developer"]
-            category = appinfo["genre"]
-            return appname, store, publisher, category
-        except:
-            return None
+        # try:
+        appinfo = app(appid, country=country)
+        appname = appinfo["title"]
+        publisher = appinfo["developer"]
+        category = appinfo["genre"]
+        logger.critical(appinfo)
+        return appname, store, publisher, category
+        # except:
+        #     return None
 
 
 def fetch_data_from_app_store(country, app_id, n):
@@ -111,7 +112,7 @@ def create_review_data(app_id, country, store_type, app_instance):
                     if "entry" in review_data["feed"]
                     else []
                 )
-
+        logger.critical(review_list)
         AppStoreReview.objects.bulk_create(review_list)
         review_create_response = True
     elif store_type == "PlayStore":
